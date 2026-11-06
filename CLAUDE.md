@@ -22,11 +22,58 @@ Fill this in once. A worker with context knows. A worker without it guesses.
 
 | When the operator asks for... | Use this |
 |---|---|
-| <!-- TODO(author): one row per slash command --> | `/...` |
+| What needs attention, the week, what is overdue | `/attention` |
+| Renewals coming up, what we owe the broker | `/renewals` |
+| The whole programme, every policy | `/policies` |
+| One policy | `/policy` |
+| New policy | `/add-policy` |
+| A policy renewed, new premium | `/renew` |
+| We sent the renewal information | `/disclose` |
+| Draft the renewal information, the proposal | `/renewal-submission` |
+| Something changed: new site, acquisition, new product or market | `/log-change` |
+| Schedule of values, sums insured | `/schedule` |
+| Are we underinsured | `/underinsured` |
+| New building, vehicle or plant on cover | `/add-asset` |
+| A valuation came in | `/value` |
+| Change a sum insured | `/declare` |
+| Something happened, a loss, an incident | `/log-claim` |
+| Draft the claim notice | `/claim-notification` |
+| We told the insurer, here is the claim number | `/notify-claim` |
+| Claims, open claims | `/claims` |
+| One claim | `/claim` |
+| News on a claim, new estimate, payment | `/claim-update` |
+| Claim settled, declined or withdrawn | `/close-claim` |
+| Contractor certificates, who is covered | `/certificates` |
+| One contractor | `/contractor` |
+| New contractor | `/add-contractor` |
+| A certificate of currency arrived | `/certificate` |
+| Ask a contractor for their certificate | `/cert-request` |
+| Material changes, what insurers have been told | `/changes` |
+| New company or division in the group | `/add-entity` |
+| The group's companies | `/entities` |
+| One company | `/entity` |
+| This year's revenue and headcount | `/declare-metrics` |
+| Who pays what share of the premium | `/allocation` |
+| Premium allocation for the journals | `/allocation-statement` |
+| What the programme costs, increases | `/spend` |
+| Claims against premium by class | `/loss-ratio` |
+| Are we compliant | `/compliance` |
+| The Monday review | `/weekly-review` |
+| Bring data across from Origami Risk | `/import` |
+| A copy of everything | `/export` |
+| Who changed what | `/activity` |
+| Add a field, change a rule or threshold | `/customise` |
+| A new dashboard | `/new-view` |
 
-If an ask fits nothing here, run the CLI directly (`npm run <cli> -- --help`) and then propose a new command for it.
+If an ask fits nothing here, run the CLI directly (`npm run cover -- help`) and then propose a new command for it.
 
 ## Hard rules
+
+- Never record a renewal the CLI refuses. Say what is owed: the renewal information, or the changes not yet told to the insurer.
+- Run `disclose` and `notify-claim` only after the operator confirms the information or notice actually went, with the real date.
+- Never decide that a change is not material. If the operator mentions a new site, asset, product, market, contract or activity, offer to log it.
+- A claim is notified by a person. Draft the notice; never contact a broker, insurer or contractor from here.
+- Money flags are in dollars. Claims, valuations and certificates are never edited in place: a correction is a new note or a new record.
 
 - Never send email or messages from here. Draft to `drafts/`, a person sends.
 - Never delete records without an explicit yes in this session. Prefer marking closed or archived.

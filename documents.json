@@ -1,11 +1,42 @@
 [
   {
-    "name": "example",
-    "title": "TODO(author): the first document this industry must produce",
-    "for_each": "select gen_random_uuid() as id, 'Example' as name",
-    "file": "name",
+    "name": "premium-allocation",
+    "title": "Insurance premium allocation",
+    "for_each": "select e.id, e.code || ' ' || e.name as label from entities e where e.active and exists (select 1 from premium_allocation a where a.entity = e.code and a.base > 0) order by e.code",
+    "file": "label",
     "sections": [
-      { "title": "Details", "sql": "select 'replace me' as item, $1::text as record_id" }
+      { "title": "Entity", "layout": "record",
+        "sql": "select name as entity, country, to_char(revenue_cents / 100, 'FM$999,999,999,999') as revenue_declared, headcount, metrics_year as year from entities where id = $1" },
+      { "title": "Share of each policy", "note": "Premium and levies of each policy in force, shared on the basis set for that policy.",
+        "sql": "select a.policy, a.class, a.basis, a.share_pct as share, to_char(a.allocated_cents / 100, 'FM$999,999,999') as amount from premium_allocation a join entities e on e.code = a.entity where e.id = $1 and a.base > 0 order by a.policy" },
+      { "title": "Total",
+        "sql": "select to_char(sum(a.allocated_cents) / 100, 'FM$999,999,999') as total_for_the_year from premium_allocation a join entities e on e.code = a.entity where e.id = $1 and a.base > 0" }
+    ]
+  },
+  {
+    "name": "schedule-of-values",
+    "title": "Schedule of values",
+    "for_each": "select p.id, p.code as label from policies p where p.status = 'active' and exists (select 1 from assets a where a.policy_id = p.id and a.active) order by p.code",
+    "file": "label",
+    "sections": [
+      { "title": "Policy", "layout": "record",
+        "sql": "select name as policy, insurer, policy_number, period_start || ' to ' || period_end as period, average_pct || '%' as average_clause from policies where id = $1" },
+      { "title": "Declared values",
+        "sql": "select s.code, s.entity, s.kind, s.name, s.location, to_char(s.declared_cents / 100, 'FM$999,999,999') as declared, s.valued_on from asset_schedule s join policies p on p.code = s.policy where p.id = $1 and s.active order by s.kind, s.code" },
+      { "title": "Total declared",
+        "sql": "select to_char(sum(declared_cents) / 100, 'FM$999,999,999,999') as total from assets where policy_id = $1 and active" }
+    ]
+  },
+  {
+    "name": "claims-history",
+    "title": "Claims history",
+    "for_each": "select p.id, p.code as label from policies p where p.status = 'active' and p.renewed_from_id is not null order by p.code",
+    "file": "label",
+    "sections": [
+      { "title": "Policy", "layout": "record",
+        "sql": "select name as policy, class, insurer, period_start || ' to ' || period_end as period from policies where id = $1" },
+      { "title": "Claims in this class, five years",
+        "sql": "select c.code, c.policy, c.occurred_on, c.description, to_char(c.paid_cents / 100, 'FM$999,999,999') as paid, to_char(c.reserve_cents / 100, 'FM$999,999,999') as reserve, c.status from claim_register c join policies p on p.class = c.class where p.id = $1 and c.occurred_on > current_date - 365 * 5 order by c.occurred_on desc" }
     ]
   }
 ]

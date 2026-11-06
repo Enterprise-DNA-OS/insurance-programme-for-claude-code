@@ -2,13 +2,45 @@
   {
     "name": "week",
     "title": "This week",
-    "subtitle": "Insurance Programme for Claude Code: what needs attention, rendered by npm run view",
+    "subtitle": "What needs a person across the insurance programme, worst first",
     "sections": [
-      {
-        "title": "Needs attention",
-        "note": "TODO(author): point this at the industry's attention view (overdue, stuck, quiet).",
-        "sql": "select 'replace me' as item, 'TODO(author)' as why"
-      }
+      { "title": "Needs attention", "note": "Severity 1: uninsured, a duty of disclosure or a claim notice at risk, or underinsurance. 2: due soon. 3: housekeeping.",
+        "sql": "select severity, item, rule, detail, days from programme_attention order by severity, days desc nulls last, item" }
+    ]
+  },
+  {
+    "name": "renewals",
+    "title": "Renewals",
+    "subtitle": "Every policy in force, when it renews and what is still owed to the insurer",
+    "sections": [
+      { "title": "Due in the next 120 days",
+        "sql": "select p.code as policy, p.name, p.insurer, p.period_end as renews, p.days_to_expiry as days, case when p.disclosure_sent_on >= p.period_start then 'sent ' || p.disclosure_sent_on else 'not sent' end as renewal_information, (select count(*) from changes c where c.class = p.class and c.disclosed_on is null)::int as undisclosed_changes from policy_register p where p.status = 'active' and p.renewed_into is null and p.days_to_expiry <= 120 order by p.days_to_expiry" },
+      { "title": "Changes not yet told to insurers",
+        "sql": "select c.code, c.class, c.description, c.occurred_on as happened from changes c where c.disclosed_on is null order by c.occurred_on" },
+      { "title": "The programme",
+        "sql": "select code as policy, class, insurer, period_end as renews, to_char(total_cents / 100, 'FM$999,999,999') as premium, cover from policy_register where status = 'active' order by period_end" }
+    ]
+  },
+  {
+    "name": "schedule",
+    "title": "Schedule of values",
+    "subtitle": "What is declared to the insurer against what it would cost to replace",
+    "sections": [
+      { "title": "Under the average clause", "note": "A claim on these is paid in proportion to the share declared.",
+        "sql": "select code, name, to_char(declared_cents / 100, 'FM$999,999,999') as declared, to_char(replacement_cents / 100, 'FM$999,999,999') as replacement, pct_declared as pct, average_pct as clause_pct from asset_schedule where active and pct_declared < average_pct order by pct_declared" },
+      { "title": "Every asset",
+        "sql": "select code, entity, policy, kind, name, to_char(declared_cents / 100, 'FM$999,999,999') as declared, pct_declared as pct, valued_on from asset_schedule where active order by policy, kind, code" }
+    ]
+  },
+  {
+    "name": "claims",
+    "title": "Claims",
+    "subtitle": "Open claims, what is owed on each, and three years of losses by class",
+    "sections": [
+      { "title": "Open claims",
+        "sql": "select code, policy, description, discovered_on as found, coalesce(notified_on::text, 'NOT NOTIFIED, due ' || notify_by) as notified, to_char(reserve_cents / 100, 'FM$999,999,999') as reserve, days_quiet from claim_register where status = 'open' order by discovered_on" },
+      { "title": "Contractors without current cover",
+        "sql": "select code, name, trade, state, expires_on from contractor_cover where active and state <> 'current' order by state, code" }
     ]
   }
 ]
